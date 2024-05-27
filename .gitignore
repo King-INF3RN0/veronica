@@ -7,3 +7,6 @@ chatbot_env/
 # Ignore data directories
 data/chat_history/
 data/user_data/
+
+# Ignore all .txt files in the data directory
+data/*.txt

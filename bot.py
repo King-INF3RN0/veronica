@@ -21,6 +21,16 @@ intents.message_content = True  # Enable only the necessary intent
 # Initialize the Discord client
 discord_client = discord.Client(intents=intents)
 
+def get_version():
+    with open("version.txt", "r") as file:
+        return file.read().strip()
+
+@discord_client.event
+async def on_ready():
+    version = get_version()
+    print(f'We have logged in as {discord_client.user}. Version: {version}')
+    discord_client.loop.create_task(random_chat_interjections())
+
 personality = (
     "You are a friendly Discord user named Veronica with a quirky sense of humor (don't directly mention this). "
     "You always try to provide accurate and polite responses but can be sarcastic in a way that matches the vibe of the channel you're speaking in. "
@@ -118,25 +128,36 @@ async def count_active_users(channel, time_frame=10):
             active_users.add(message.author.id)
     return len(active_users)
 
+async def is_active_chat(channel, time_frame=60):
+    now = datetime.datetime.utcnow().replace(tzinfo=None)
+    recent_messages = []
+    async for message in channel.history(limit=100):
+        message_time = message.created_at.replace(tzinfo=None)
+        if (now - message_time).total_seconds() <= time_frame * 60:
+            recent_messages.append(message.author.id)
+    return len(set(recent_messages)) > 1
+
 async def random_chat_interjections():
     await discord_client.wait_until_ready()
     channel = discord.utils.get(discord_client.get_all_channels(), name='general')  # Change 'general' to your preferred channel name
     while not discord_client.is_closed():
         await asyncio.sleep(random.randint(3600, 10800))  # Random interval between 1 to 3 hours
-        messages = [
-            {"role": "system", "content": personality},
-            {"role": "user", "content": "Say something funny or interesting."}
-        ]
-        try:
-            completion = client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages,
-                max_tokens=75
-            )
-            response_text = completion.choices[0].message.content.strip()
-            await channel.send(response_text)
-        except Exception as e:
-            print(f"Error generating interjection: {e}")
+        if await is_active_chat(channel):
+            messages = [
+                {"role": "system", "content": personality},
+                {"role": "user", "content": "Say something funny or interesting."}
+            ]
+            try:
+                completion = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=messages,
+                    max_tokens=75
+                )
+                response_text = completion.choices[0].message.content.strip()
+                await channel.send(response_text)
+            except Exception as e:
+                print(f"Error generating interjection: {e}")
+
 
 @discord_client.event
 async def on_ready():
