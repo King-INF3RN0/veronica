@@ -1,0 +1,9 @@
+# Ignore the .env file
+.env
+
+# Ignore virtual environment directories
+chatbot_env/
+
+# Ignore data directories
+data/chat_history/
+data/user_data/
