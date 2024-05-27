@@ -11,7 +11,6 @@ GPT-4o Powered Discord Chatbot
    ```
 
 2. **Create and activate the virtual environment:**
-`
    ```sh
    python -m venv chatbot_env
    source chatbot_env/bin/activate  # On Windows use: chatbot_env\Scripts\activate
