@@ -10,3 +10,6 @@ data/user_data/
 
 # Ignore all .txt files in the data directory
 data/*.txt
+
+# Ignore the _pycache__/ compilation directory
+__pycache__/
