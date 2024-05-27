@@ -35,12 +35,6 @@ GPT-4o Powered Discord Chatbot
    python bot.py
    ```
 
-6. **Increment the version number (optional):**
-
-   ```sh
-   python increment_version.py
-   ```
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
