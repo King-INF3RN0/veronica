@@ -5,6 +5,7 @@ from personality import handle_response
 from helpers.response import generate_response
 from helpers.interjections import random_chat_interjections
 from helpers.active_users import count_active_users
+from helpers.history import save_important_info  # Add save_important_info import
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')

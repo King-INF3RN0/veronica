@@ -23,3 +23,16 @@ def load_conversation_history(user_id):
             return file.read()
     except FileNotFoundError:
         return ""
+
+def save_important_info(user_id, info):
+    """Saves important information for a user to a separate file."""
+    with open(f"data/user_data/important_info_{user_id}.txt", "a", encoding="utf-8") as file:
+        file.write(info + "\n")
+
+def load_important_info(user_id):
+    """Loads important information for a user from a separate file."""
+    try:
+        with open(f"data/user_data/important_info_{user_id}.txt", "r", encoding="utf-8") as file:
+            return file.read()
+    except FileNotFoundError:
+        return ""
