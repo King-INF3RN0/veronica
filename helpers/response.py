@@ -21,7 +21,7 @@ async def analyze_and_extract_important_info(text):
     """Uses GPT to analyze text and extract important information."""
     try:
         completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",  # Use a cheaper model if needed, gpt-3.5-turbo is roughtly 10x cheaper per token for input and output than gpt-4o
+            model="gpt-3.5-turbo",  # Use a cheaper model if needed
             messages=[
                 {"role": "system", "content": "Extract important information such as names, locations, occupations, interests, and any other relevant personal details from the following text."},
                 {"role": "user", "content": text}
@@ -29,6 +29,19 @@ async def analyze_and_extract_important_info(text):
             max_tokens=150
         )
         response_text = completion.choices[0].message.content.strip()
+
+        # Check for phrases indicating insufficient information
+        insufficient_info_phrases = [
+            "not enough information", 
+            "insufficient information", 
+            "cannot extract any personal details", 
+            "no relevant personal details found",
+            "no personal information available"
+        ]
+        
+        if any(phrase in response_text.lower() for phrase in insufficient_info_phrases):
+            return ""  # Return empty string if insufficient information is detected
+
         return response_text
     except Exception as e:
         logging.error(f"Error analyzing text: {e}")
