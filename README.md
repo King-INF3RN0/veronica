@@ -5,7 +5,7 @@ GPT-4o Powered Discord Chatbot
 
 1. **Clone the repository:**
     ```sh
-    git clone https://github.com/yourusername/veronica-bot.git
+    git clone https://github.com/King-INF3RN0/veronica.git
     cd veronica-bot
     ```
 

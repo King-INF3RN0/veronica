@@ -19,7 +19,16 @@ logging.basicConfig(level=logging.INFO)
 def extract_entities(text):
     """Extracts entities from text using spaCy's NER."""
     doc = nlp(text)
-    entities = {ent.label_: ent.text for ent in doc.ents}
+    entities = {}
+    for ent in doc.ents:
+        if ent.label_ == "PERSON":
+            entities["Name"] = ent.text
+        elif ent.label_ == "GPE":
+            entities["Location"] = ent.text
+        elif ent.label_ == "ORG":
+            entities["Interest"] = ent.text
+        elif ent.label_ == "OCCUPATION":
+            entities["Occupation"] = ent.text
     return entities
 
 async def generate_response(prompt, user_id, context=[]):
@@ -41,7 +50,7 @@ async def generate_response(prompt, user_id, context=[]):
         save_conversation_history(user_id, user_history)
         
         # Extract entities and save as important information
-        entities = extract_entities(response_text)
+        entities = extract_entities(prompt)
         if entities:
             entity_info = " ".join([f"{key}: {value}" for key, value in entities.items()])
             save_important_info(user_id, entity_info)
