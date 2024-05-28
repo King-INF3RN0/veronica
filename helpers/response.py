@@ -2,8 +2,8 @@ import openai
 import os
 import logging
 from personality import personality
-from helpers.history import save_conversation_history, trim_conversation_history, save_important_info, load_conversation_history, load_important_info
-from helpers.analysis import analyze_message_with_model, handle_user_data, analyze_and_extract_important_info
+from .history import save_conversation_history, trim_conversation_history, save_important_info, load_conversation_history, load_important_info
+from .analysis import analyze_message_with_model, handle_user_data, analyze_and_extract_important_info
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
@@ -29,7 +29,7 @@ async def generate_response(prompt, user_id, context=[]):
     ]
 
     try:
-        completion = openai.ChatCompletion.create(
+        completion = openai.chat.completions.create(
             model="gpt-4o",
             messages=messages,
             max_tokens=150

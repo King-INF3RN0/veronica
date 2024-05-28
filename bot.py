@@ -4,23 +4,13 @@ import random
 import json
 from dotenv import load_dotenv
 from personality import handle_response
-from helpers.response import generate_response
+from helpers.response import generate_response, load_all_important_info
 from helpers.interjections import random_chat_interjections
 from helpers.active_users import count_active_users
 from helpers.history import save_important_info, load_important_info, save_multi_user_conversation
 
 conversation_state = {}  # Define conversation state globally
 important_data = {}  # Dictionary to store important data
-
-def load_all_important_info():
-    """Loads all important information for all users."""
-    global important_data
-    if not os.path.exists('data/user_data'):
-        os.makedirs('data/user_data')
-    for filename in os.listdir('data/user_data'):
-        if filename.startswith('important_info_'):
-            user_id = filename[len('important_info_'):-4]
-            important_data[user_id] = load_important_info(user_id)
 
 load_all_important_info()  # Load all important info on startup
 
@@ -95,6 +85,5 @@ async def on_message(message):
             else:
                 await message.channel.send(response)
             conversation_state[user_id] = True  # Update conversation state
-
 
 discord_client.run(DISCORD_TOKEN)
