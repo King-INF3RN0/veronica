@@ -12,13 +12,18 @@ important_data = {}  # Define important_data
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
+def is_information_request(text):
+    """Determines if the text is requesting user information."""
+    request_keywords = ["what do you know about me", "tell me about", "information on", "details about"]
+    return any(keyword in text.lower() for keyword in request_keywords)
+
 async def analyze_and_extract_important_info(text):
     """Uses GPT to analyze text and extract important information."""
     try:
         completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",  # Use a cheaper model if needed
+            model="gpt-3.5-turbo",  # Use a cheaper model if needed, gpt-3.5-turbo is roughtly 10x cheaper per token for input and output than gpt-4o
             messages=[
-                {"role": "system", "content": "Extract important information from the following text."},
+                {"role": "system", "content": "Extract important information such as names, locations, occupations, interests, and any other relevant personal details from the following text."},
                 {"role": "user", "content": text}
             ],
             max_tokens=150
@@ -33,13 +38,26 @@ async def generate_response(prompt, user_id, context=[]):
     """Generates a response using OpenAI's API based on the given prompt and user ID."""
     user_history = user_data.get(user_id, "") + '\n'.join(context)
     important_info = load_important_info(user_id)
-    messages = [
-        {"role": "system", "content": personality},
-        {"role": "user", "content": prompt}
-    ]
 
-    if important_info:
-        messages.append({"role": "system", "content": f"User information: {important_info}"})
+    if is_information_request(prompt):
+        # If the message requests user information, use GPT-3.5-turbo to extract and include important info
+        important_info = await analyze_and_extract_important_info(important_info)
+        if important_info:
+            messages = [
+                {"role": "system", "content": personality},
+                {"role": "system", "content": f"User information: {important_info}"},
+                {"role": "user", "content": prompt}
+            ]
+        else:
+            messages = [
+                {"role": "system", "content": personality},
+                {"role": "user", "content": prompt}
+            ]
+    else:
+        messages = [
+            {"role": "system", "content": personality},
+            {"role": "user", "content": prompt}
+        ]
 
     try:
         completion = openai.chat.completions.create(
@@ -53,11 +71,12 @@ async def generate_response(prompt, user_id, context=[]):
         save_conversation_history(user_id, user_history)
         
         # Use GPT to analyze and extract important information
-        extracted_info = await analyze_and_extract_important_info(prompt)
-        if extracted_info:
-            save_important_info(user_id, extracted_info)
-            important_data[user_id] = important_data.get(user_id, "") + extracted_info + "\n"
-            logging.info(f"Important info saved for user {user_id}: {extracted_info}")
+        if not is_information_request(prompt):
+            extracted_info = await analyze_and_extract_important_info(prompt)
+            if extracted_info:
+                save_important_info(user_id, extracted_info)
+                important_data[user_id] = important_data.get(user_id, "") + extracted_info + "\n"
+                logging.info(f"Important info saved for user {user_id}: {extracted_info}")
             
         return response_text
     except Exception as e:
