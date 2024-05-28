@@ -21,19 +21,14 @@ async def analyze_and_extract_important_info(text):
     """Uses GPT to analyze text and extract important information."""
     try:
         completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",  # Use a cheaper model if needed
+            model="gpt-3.5-turbo",  # Use a cheaper model if needed, gpt-3.5-turbo is roughly 10x cheaper per token for input and output than gpt-4o
             messages=[
-                {"role": "system", "content": "Extract important information such as names, locations, occupations, interests, and any other relevant personal details from the following text."},
+                {"role": "system", "content": "Extract important information such as names, locations, occupations, interests, and any other relevant personal details from the following text. If there is no relevant personal information, respond with an empty message."},
                 {"role": "user", "content": text}
             ],
             max_tokens=150
         )
         response_text = completion.choices[0].message.content.strip()
-
-        # Check if the response indicates insufficient information
-        if await check_insufficient_information(response_text):
-            return ""  # Return empty string if insufficient information is detected
-
         return response_text
     except Exception as e:
         logging.error(f"Error analyzing text: {e}")
@@ -95,7 +90,7 @@ async def generate_response(prompt, user_id, context=[]):
         # Use GPT to analyze and extract important information
         if not is_information_request(prompt):
             extracted_info = await analyze_and_extract_important_info(prompt)
-            if extracted_info:
+            if extracted_info:  # Only save if non-empty
                 save_important_info(user_id, extracted_info)
                 important_data[user_id] = important_data.get(user_id, "") + extracted_info + "\n"
                 logging.info(f"Important info saved for user {user_id}: {extracted_info}")
