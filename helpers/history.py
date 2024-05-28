@@ -1,5 +1,5 @@
 import os
-import logging  # Add logging import
+import logging
 
 # Ensure the necessary directories exist
 os.makedirs('data/chat_history', exist_ok=True)

@@ -2,7 +2,8 @@ import openai
 import os
 import logging
 from personality import personality
-from .history import save_conversation_history, trim_conversation_history, save_important_info, load_conversation_history, load_important_info
+from helpers.history import save_conversation_history, trim_conversation_history, save_important_info, load_conversation_history, load_important_info
+from helpers.analysis import analyze_message_with_model, handle_user_data, analyze_and_extract_important_info
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
@@ -12,55 +13,23 @@ important_data = {}  # Define important_data
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-def is_information_request(text):
-    """Determines if the text is requesting user information."""
-    request_keywords = ["what do you know about me", "tell me about", "information on", "details about"]
-    return any(keyword in text.lower() for keyword in request_keywords)
-
-async def analyze_and_extract_important_info(text):
-    """Uses GPT to analyze text and extract important information."""
-    try:
-        completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",  # Use a cheaper model if needed, gpt-3.5-turbo is roughly 10x cheaper per token for input and output than gpt-4o
-            messages=[
-                {"role": "system", "content": "Extract important information such as names, locations, occupations, interests, and any other relevant personal details from the following text. If there is no relevant personal information, respond with an empty message."},
-                {"role": "user", "content": text}
-            ],
-            max_tokens=150
-        )
-        response_text = completion.choices[0].message.content.strip()
-        return response_text
-    except Exception as e:
-        logging.error(f"Error analyzing text: {e}")
-        return ""
-
 async def generate_response(prompt, user_id, context=[]):
     """Generates a response using OpenAI's API based on the given prompt and user ID."""
     user_history = user_data.get(user_id, "") + '\n'.join(context)
-    important_info = load_important_info(user_id)
 
-    if is_information_request(prompt):
-        # If the message requests user information, use GPT-3.5-turbo to extract and include important info
-        important_info = await analyze_and_extract_important_info(important_info)
-        if important_info:
-            messages = [
-                {"role": "system", "content": personality},
-                {"role": "system", "content": f"User information: {important_info}"},
-                {"role": "user", "content": prompt}
-            ]
-        else:
-            messages = [
-                {"role": "system", "content": personality},
-                {"role": "user", "content": prompt}
-            ]
-    else:
-        messages = [
-            {"role": "system", "content": personality},
-            {"role": "user", "content": prompt}
-        ]
+    # Process the message with GPT-3.5-turbo to determine the action type
+    action_type, gpt35_response = await analyze_message_with_model(prompt)
+    
+    # Handle user data based on the determined action type
+    prompt = await handle_user_data(action_type, user_id, prompt)
+
+    messages = [
+        {"role": "system", "content": personality},
+        {"role": "user", "content": prompt}
+    ]
 
     try:
-        completion = openai.chat.completions.create(
+        completion = openai.ChatCompletion.create(
             model="gpt-4o",
             messages=messages,
             max_tokens=150
@@ -70,10 +39,10 @@ async def generate_response(prompt, user_id, context=[]):
         user_history = trim_conversation_history(user_history)
         save_conversation_history(user_id, user_history)
         
-        # Use GPT to analyze and extract important information
-        if not is_information_request(prompt):
+        # Save important info if applicable
+        if action_type == "b" or action_type == "c":
             extracted_info = await analyze_and_extract_important_info(prompt)
-            if extracted_info:  # Only save if non-empty
+            if extracted_info:
                 save_important_info(user_id, extracted_info)
                 important_data[user_id] = important_data.get(user_id, "") + extracted_info + "\n"
                 logging.info(f"Important info saved for user {user_id}: {extracted_info}")
