@@ -30,22 +30,31 @@ async def analyze_and_extract_important_info(text):
         )
         response_text = completion.choices[0].message.content.strip()
 
-        # Check for phrases indicating insufficient information
-        insufficient_info_phrases = [
-            "not enough information", 
-            "insufficient information", 
-            "cannot extract any personal details", 
-            "no relevant personal details found",
-            "no personal information available"
-        ]
-        
-        if any(phrase in response_text.lower() for phrase in insufficient_info_phrases):
+        # Check if the response indicates insufficient information
+        if await check_insufficient_information(response_text):
             return ""  # Return empty string if insufficient information is detected
 
         return response_text
     except Exception as e:
         logging.error(f"Error analyzing text: {e}")
         return ""
+
+async def check_insufficient_information(response_text):
+    """Uses GPT to determine if the response indicates insufficient information."""
+    try:
+        completion = openai.chat.completions.create(
+            model="gpt-3.5-turbo",  # Use a cheaper model if needed
+            messages=[
+                {"role": "system", "content": "Does the following text indicate that there is insufficient information to extract personal details? Respond with 'yes' or 'no'."},
+                {"role": "user", "content": response_text}
+            ],
+            max_tokens=10
+        )
+        check_response = completion.choices[0].message.content.strip().lower()
+        return check_response == "yes"
+    except Exception as e:
+        logging.error(f"Error checking for insufficient information: {e}")
+        return False
 
 async def generate_response(prompt, user_id, context=[]):
     """Generates a response using OpenAI's API based on the given prompt and user ID."""
