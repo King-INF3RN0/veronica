@@ -4,6 +4,7 @@ import logging  # Add logging import
 # Ensure the necessary directories exist
 os.makedirs('data/chat_history', exist_ok=True)
 os.makedirs('data/user_data', exist_ok=True)
+os.makedirs('data/multi_user_conversations', exist_ok=True)
 
 def trim_conversation_history(history, max_messages=5):
     """Trims the conversation history to the last few messages to stay within token limits."""
@@ -38,4 +39,9 @@ def load_important_info(user_id):
             return file.read()
     except FileNotFoundError:
         return ""
+
+def save_multi_user_conversation(conversation_id, context):
+    """Saves conversation history for a multi-user conversation."""
+    with open(f"data/multi_user_conversations/conversation_{conversation_id}.txt", "w", encoding="utf-8") as file:
+        file.write("\n".join(context))
     
