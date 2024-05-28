@@ -48,31 +48,34 @@ async def on_message(message):
         return
 
     user_id = message.author.id
-    context = []
+    nickname = message.author.display_name
+    username = message.author.name
 
-    async for msg in message.channel.history(limit=5):
-        if msg.author == discord_client.user:
-            context.append(f"Veronica: {msg.content}")
-        else:
-            context.append(f"User: {msg.content}")
+    # Save user information if it's the first interaction
+    if not os.path.exists(f"data/user_data/important_info_{user_id}.txt"):
+        user_info = f"Nickname: {nickname}\nUsername: {username}\n"
+        save_important_info(user_id, user_info)
 
-    if discord_client.user in message.mentions or discord_client.user.name.lower() in message.content.lower():
-        prompt = message.content.replace(f'@{discord_client.user.name}', '').strip()
-        if prompt:
-            response = await generate_response(prompt, user_id, context)
+    response = handle_response(message, user_id)
+    if response:
+        await message.channel.send(response)
+    else:
+        if discord_client.user in message.mentions or discord_client.user.name.lower() in message.content.lower():
+            prompt = message.content.replace(f'@{discord_client.user.name}', '').strip()
+            if prompt:
+                response = await generate_response(prompt, user_id)
+                active_users = await count_active_users(message.channel)
+                if active_users > 2:
+                    await message.channel.send(f"<@{user_id}> {response}")  # Ping if multiple users are active.
+                else:
+                    await message.channel.send(response)
+        elif is_directed_at_bot(message, user_id):
+            prompt = message.content.strip()
+            response = await generate_response(prompt, user_id)
             active_users = await count_active_users(message.channel)
             if active_users > 2:
-                await message.channel.send(f"<@{user_id}> {response}")  # Ping if multiple users are active.
+                await message.channel.send(f"<@{user_id}> {response}")
             else:
                 await message.channel.send(response)
-    else:
-        prompt = message.content.strip()
-        response = await generate_response(prompt, user_id, context)
-        active_users = await count_active_users(message.channel)
-        if active_users > 2:
-            await message.channel.send(f"<@{user_id}> {response}")
-        else:
-            await message.channel.send(response)
-        conversation_state[user_id] = True  # Update conversation state
 
 discord_client.run(DISCORD_TOKEN)
