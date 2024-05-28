@@ -1,39 +1,42 @@
 # veronica
 GPT-4o Powered Discord Chatbot
 
-## Setup
+## Setup Instructions
 
 1. **Clone the repository:**
+    ```sh
+    git clone https://github.com/yourusername/veronica-bot.git
+    cd veronica-bot
+    ```
 
-   ```sh
-   git clone https://github.com/King-INF3RN0/veronica.git
-   cd veronica
-   ```
-
-2. **Create and activate the virtual environment:**
-   ```sh
-   python -m venv chatbot_env
-   source chatbot_env/bin/activate  # On Windows use: chatbot_env\Scripts\activate
-   ```
+2. **Create a virtual environment:**
+    ```sh
+    python -m venv chatbot_env
+    source chatbot_env/bin/activate  # On Windows use `chatbot_env\Scripts\activate`
+    ```
 
 3. **Install the dependencies:**
+    ```sh
+    pip install -r requirements.txt
+    ```
 
-   ```sh
-   pip install -r requirements.txt
-   ```
+4. **Download the spaCy language model:**
+    ```sh
+    python -m spacy download en_core_web_sm
+    ```
 
-4. **Create a `.env` file based on `.env.example`:**
+5. **Set up your environment variables:**
+    - Create a `.env` file in the root directory with the following content:
+        ```env
+        DISCORD_TOKEN=your_discord_token
+        OPENAI_API_KEY=your_openai_api_key
+        ```
 
-   ```plaintext
-   DISCORD_TOKEN=your_discord_token_here
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
+6. **Run the bot:**
+    ```sh
+    python bot.py
+    ```
 
-5. **Run the bot:**
-
-   ```sh
-   python bot.py
-   ```
 
 ## License
 

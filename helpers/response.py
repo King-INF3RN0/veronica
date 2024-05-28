@@ -1,8 +1,12 @@
+import spacy
 import openai
 import os
+import logging
 from personality import personality
 from .history import save_conversation_history, trim_conversation_history, save_important_info, load_conversation_history
-import logging  # Add logging import
+
+# Load spaCy model
+nlp = spacy.load("en_core_web_sm")
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
@@ -11,6 +15,12 @@ important_data = {}  # Define important_data
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
+
+def extract_entities(text):
+    """Extracts entities from text using spaCy's NER."""
+    doc = nlp(text)
+    entities = {ent.label_: ent.text for ent in doc.ents}
+    return entities
 
 async def generate_response(prompt, user_id, context=[]):
     """Generates a response using OpenAI's API based on the given prompt and user ID."""
@@ -30,11 +40,13 @@ async def generate_response(prompt, user_id, context=[]):
         user_history = trim_conversation_history(user_history)
         save_conversation_history(user_id, user_history)
         
-        # Save important information if detected
-        if "important" in response_text.lower():  # Simplified check for important info
-            save_important_info(user_id, response_text)
-            important_data[user_id] = important_data.get(user_id, "") + response_text + "\n"
-            logging.info(f"Important info saved for user {user_id}")
+        # Extract entities and save as important information
+        entities = extract_entities(response_text)
+        if entities:
+            entity_info = " ".join([f"{key}: {value}" for key, value in entities.items()])
+            save_important_info(user_id, entity_info)
+            important_data[user_id] = important_data.get(user_id, "") + entity_info + "\n"
+            logging.info(f"Important entities saved for user {user_id}: {entity_info}")
             
         return response_text
     except Exception as e:
