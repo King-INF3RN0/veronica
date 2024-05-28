@@ -2,7 +2,7 @@ import openai
 import os
 import logging
 from personality import personality
-from .history import save_conversation_history, trim_conversation_history, save_important_info, load_conversation_history
+from .history import save_conversation_history, trim_conversation_history, save_important_info, load_conversation_history, load_important_info
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
@@ -32,10 +32,15 @@ async def analyze_and_extract_important_info(text):
 async def generate_response(prompt, user_id, context=[]):
     """Generates a response using OpenAI's API based on the given prompt and user ID."""
     user_history = user_data.get(user_id, "") + '\n'.join(context)
+    important_info = load_important_info(user_id)
     messages = [
         {"role": "system", "content": personality},
         {"role": "user", "content": prompt}
     ]
+
+    if important_info:
+        messages.append({"role": "system", "content": f"User information: {important_info}"})
+
     try:
         completion = openai.chat.completions.create(
             model="gpt-4o",
@@ -48,11 +53,11 @@ async def generate_response(prompt, user_id, context=[]):
         save_conversation_history(user_id, user_history)
         
         # Use GPT to analyze and extract important information
-        important_info = await analyze_and_extract_important_info(prompt)
-        if important_info:
-            save_important_info(user_id, important_info)
-            important_data[user_id] = important_data.get(user_id, "") + important_info + "\n"
-            logging.info(f"Important info saved for user {user_id}: {important_info}")
+        extracted_info = await analyze_and_extract_important_info(prompt)
+        if extracted_info:
+            save_important_info(user_id, extracted_info)
+            important_data[user_id] = important_data.get(user_id, "") + extracted_info + "\n"
+            logging.info(f"Important info saved for user {user_id}: {extracted_info}")
             
         return response_text
     except Exception as e:

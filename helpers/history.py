@@ -44,4 +44,3 @@ def save_multi_user_conversation(conversation_id, context):
     """Saves conversation history for a multi-user conversation."""
     with open(f"data/multi_user_conversations/conversation_{conversation_id}.txt", "w", encoding="utf-8") as file:
         file.write("\n".join(context))
-    

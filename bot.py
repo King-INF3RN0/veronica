@@ -7,7 +7,7 @@ from personality import handle_response
 from helpers.response import generate_response
 from helpers.interjections import random_chat_interjections
 from helpers.active_users import count_active_users
-from helpers.history import save_important_info, load_important_info
+from helpers.history import save_important_info, load_important_info, save_multi_user_conversation
 
 conversation_state = {}  # Define conversation state globally
 important_data = {}  # Dictionary to store important data
