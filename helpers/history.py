@@ -44,3 +44,14 @@ def save_multi_user_conversation(conversation_id, context):
     """Saves conversation history for a multi-user conversation."""
     with open(f"data/multi_user_conversations/conversation_{conversation_id}.txt", "w", encoding="utf-8") as file:
         file.write("\n".join(context))
+
+def load_all_important_info():
+    """Loads all important information for all users."""
+    important_data = {}
+    if not os.path.exists('data/user_data'):
+        os.makedirs('data/user_data')
+    for filename in os.listdir('data/user_data'):
+        if filename.startswith('important_info_'):
+            user_id = filename[len('important_info_'):-4]
+            important_data[user_id] = load_important_info(user_id)
+    return important_data

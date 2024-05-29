@@ -4,15 +4,15 @@ import random
 import json
 from dotenv import load_dotenv
 from personality import handle_response
-from helpers.response import generate_response, load_all_important_info
+from helpers.response import generate_response
+from helpers.history import load_all_important_info, save_important_info, load_important_info, save_multi_user_conversation
 from helpers.interjections import random_chat_interjections
 from helpers.active_users import count_active_users
-from helpers.history import save_important_info, load_important_info, save_multi_user_conversation
 
 conversation_state = {}  # Define conversation state globally
 important_data = {}  # Dictionary to store important data
 
-load_all_important_info()  # Load all important info on startup
+important_data = load_all_important_info()  # Load all important info on startup
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')

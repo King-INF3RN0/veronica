@@ -1,34 +1,9 @@
 import openai
-import os
 import logging
 from .history import load_important_info, save_important_info
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-
-async def analyze_and_extract_important_info(text):
-    """Uses GPT to analyze text and extract important information."""
-    try:
-        completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a backend process. Extract important information such as names, locations, occupations, interests, and any other relevant personal details from the following text. If there is no relevant personal information, respond with an empty message."},
-                {"role": "user", "content": text}
-            ],
-            max_tokens=150
-        )
-        response_text = completion.choices[0].message.content.strip()
-
-        # Ensure only non-empty messages are processed
-        if not response_text or response_text.lower().startswith("empty message"):
-            return "" # Return empty string if no relevant information is found
-
-        return response_text
-    except Exception as e:
-        logging.error(f"Error analyzing text: {e}")
-        return ""
 
 async def analyze_message_with_model(message_text, model_name="gpt-3.5-turbo"):
     """Process the message with the specified model to determine type and handle user data."""
@@ -69,3 +44,25 @@ async def handle_user_data(action_type, user_id, message_text):
         if extracted_info:
             save_important_info(user_id, extracted_info)
     return message_text
+
+async def analyze_and_extract_important_info(text):
+    """Uses GPT to analyze text and extract important information."""
+    try:
+        completion = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a backend process. Extract important information such as names, locations, occupations, interests, and any other relevant personal details from the following text. If there is no relevant personal information, respond with an empty message."},
+                {"role": "user", "content": text}
+            ],
+            max_tokens=150
+        )
+        response_text = completion.choices[0].message.content.strip()
+
+        # Ensure only non-empty messages are processed
+        if not response_text or response_text.lower().startswith("empty message"):
+            return "" # Return empty string if no relevant information is found
+
+        return response_text
+    except Exception as e:
+        logging.error(f"Error analyzing text: {e}")
+        return ""
