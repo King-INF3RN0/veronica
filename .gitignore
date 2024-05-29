@@ -13,3 +13,6 @@ data/*.txt
 
 # Ignore the _pycache__/ compilation directory
 __pycache__/
+
+# Ignore the deprecated helpers.analysis/
+helpers.analysis
