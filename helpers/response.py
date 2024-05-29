@@ -10,7 +10,7 @@ user_data = {}
 important_data = {}  # Define important_data
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 def is_information_request(text):
     """Determines if the text is requesting user information."""
@@ -22,6 +22,8 @@ async def analyze_and_extract_important_info(text, existing_info):
     try:
         prompt = f"Existing information: {existing_info}\nNew information: {text}\n\nCompare the new information with the existing information and update it. If there are conflicting details, replace the old ones with the new ones. Provide the updated information in a consistent format."
 
+        logging.debug(f"Calling GPT-3.5-turbo with prompt: {prompt}")
+
         completion = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -31,6 +33,8 @@ async def analyze_and_extract_important_info(text, existing_info):
             max_tokens=150
         )
         response_text = completion.choices[0].message.content.strip()
+
+        logging.debug(f"GPT-3.5-turbo response: {response_text}")
 
         # Ensure only non-empty messages are processed
         if not response_text or response_text.lower().startswith("empty message"):
@@ -45,6 +49,9 @@ async def generate_response(prompt, user_id, context=[]):
     """Generates a response using OpenAI's API based on the given prompt and user ID."""
     user_history = user_data.get(user_id, "") + '\n'.join(context)
     important_info = load_important_info(user_id)
+
+    logging.debug(f"User history: {user_history}")
+    logging.debug(f"Important info: {important_info}")
 
     if is_information_request(prompt):
         # If the message requests user information, use GPT-3.5-turbo to extract and include important info
@@ -67,6 +74,8 @@ async def generate_response(prompt, user_id, context=[]):
             {"role": "user", "content": prompt}
         ]
 
+    logging.debug(f"Sending messages to GPT-4o: {messages}")
+
     try:
         completion = openai.chat.completions.create(
             model="gpt-4o",
@@ -74,6 +83,9 @@ async def generate_response(prompt, user_id, context=[]):
             max_tokens=150
         )
         response_text = completion.choices[0].message.content.strip()
+
+        logging.debug(f"GPT-4o response: {response_text}")
+
         user_history = f"{user_history}User: {prompt}\nVeronica: {response_text}\n"
         user_history = trim_conversation_history(user_history)
         save_conversation_history(user_id, user_history)
@@ -82,9 +94,8 @@ async def generate_response(prompt, user_id, context=[]):
         if not is_information_request(prompt):
             extracted_info = await analyze_and_extract_important_info(prompt, important_info)
             if extracted_info:  # Only save if non-empty
-                # Clear the old information
-                important_data[user_id] = extracted_info
                 save_important_info(user_id, extracted_info)
+                important_data[user_id] = important_data.get(user_id, "") + extracted_info + "\n"
                 logging.info(f"Important info saved for user {user_id}: {extracted_info}")
             
         return response_text
