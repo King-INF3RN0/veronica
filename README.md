@@ -6,7 +6,7 @@ GPT-4o Powered Discord Chatbot
 1. **Clone the repository:**
     ```sh
     git clone https://github.com/King-INF3RN0/veronica.git
-    cd veronica-bot
+    cd veronica
     ```
 
 2. **Create a virtual environment:**
