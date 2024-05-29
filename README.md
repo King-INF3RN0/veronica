@@ -20,19 +20,14 @@ GPT-4o Powered Discord Chatbot
     pip install -r requirements.txt
     ```
 
-4. **Download the spaCy language model:**
-    ```sh
-    python -m spacy download en_core_web_sm
-    ```
-
-5. **Set up your environment variables:**
+4. **Set up your environment variables:**
     - Create a `.env` file in the root directory with the following content:
         ```env
         DISCORD_TOKEN=your_discord_token
         OPENAI_API_KEY=your_openai_api_key
         ```
 
-6. **Run the bot:**
+5. **Run the bot:**
     ```sh
     python bot.py
     ```
